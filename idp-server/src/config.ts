@@ -23,13 +23,21 @@ function siteOrigin(id: string, fallback: string): string {
   return process.env[`SITE_${id.toUpperCase()}_ORIGIN`] || fallback;
 }
 
+/**
+ * BFF 内部地址：环境变量 BFF_{ID}_INTERNAL 优先。
+ * 本地开发走回环端口；容器部署时由 compose 指向 BFF 容器（http://bff-mind:4001 等）。
+ */
+function bffInternal(id: string, fallbackPort: number): string {
+  return process.env[`BFF_${id.toUpperCase()}_INTERNAL`] || `http://127.0.0.1:${fallbackPort}`;
+}
+
 const sites = [
   {
     id: 'mind',
     clientId: 'reelymind',
     clientSecret: 'dev-secret-mind',
     webOrigin: siteOrigin('mind', 'http://localhost:3001'),
-    bffInternal: 'http://127.0.0.1:4001',
+    bffInternal: bffInternal('mind', 4001),
     brandName: 'ReelyMind',
     domain: 'www.reelymind.com',
   },
@@ -38,7 +46,7 @@ const sites = [
     clientId: 'reelynexus',
     clientSecret: 'dev-secret-nexus',
     webOrigin: siteOrigin('nexus', 'http://localhost:3002'),
-    bffInternal: 'http://127.0.0.1:4002',
+    bffInternal: bffInternal('nexus', 4002),
     brandName: 'ReelyNexus',
     domain: 'www.reelynexus.com',
   },
@@ -47,7 +55,7 @@ const sites = [
     clientId: 'reelytrain',
     clientSecret: 'dev-secret-train',
     webOrigin: siteOrigin('train', 'http://localhost:3003'),
-    bffInternal: 'http://127.0.0.1:4003',
+    bffInternal: bffInternal('train', 4003),
     brandName: 'ReelyTrain',
     domain: 'www.reelytrain.com',
   },

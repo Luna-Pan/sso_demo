@@ -1,0 +1,76 @@
+# 构建流水线（不在 GitHub 侧做部署）：
+#   1. 编译 idp-server（同时作为 CI 类型检查）
+#   2. 构建三个品牌前端 → 打包为 artifact（页面右侧 Artifacts 下载）
+#   3. 构建 idp / bff 两个 Docker 镜像 → 推到 GHCR（ghcr.io）
+#
+# 服务器端手动部署步骤见 deploy/.env.example 头部注释。
+# 无需配置任何 Secrets：推 GHCR 使用内置 GITHUB_TOKEN。
+# 若仓库/镜像包为私有，服务器拉取时需要一个 read:packages 权限的 PAT 登录。
+
+name: build-images
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 编译 idp-server（CI 类型检查）
+        run: npm run build --workspace idp-server
+
+      - name: 构建三个品牌前端
+        run: |
+          npm run build:mind  --workspace web && mv web/dist web/dist-mind
+          npm run build:nexus --workspace web && mv web/dist web/dist-nexus
+          npm run build:train --workspace web && mv web/dist web/dist-train
+          mkdir -p deploy/web
+          mv web/dist-mind  deploy/web/mind
+          mv web/dist-nexus deploy/web/nexus
+          mv web/dist-train deploy/web/train
+
+      - name: 上传前端静态产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: reely-web-static
+          path: deploy/web
+          retention-days: 14
+
+      - name: 计算 GHCR 镜像前缀（要求全小写）
+        id: prefix
+        run: echo "prefix=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_OUTPUT"
+
+      - name: 构建 Docker 镜像
+        env:
+          PREFIX: ${{ steps.prefix.outputs.prefix }}
+        run: |
+          docker build -f docker/idp-server.Dockerfile \
+            -t $PREFIX/reely-idp:latest -t $PREFIX/reely-idp:run-${{ github.run_number }} .
+          docker build -f docker/site-bff.Dockerfile \
+            -t $PREFIX/reely-bff:latest -t $PREFIX/reely-bff:run-${{ github.run_number }} .
+
+      - name: 登录 GHCR 并推送
+        env:
+          PREFIX: ${{ steps.prefix.outputs.prefix }}
+        run: |
+          echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+          docker push $PREFIX/reely-idp:latest
+          docker push $PREFIX/reely-idp:run-${{ github.run_number }}
+          docker push $PREFIX/reely-bff:latest
+          docker push $PREFIX/reely-bff:run-${{ github.run_number }}

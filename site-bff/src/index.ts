@@ -349,7 +349,10 @@ function scanAll(match: string): Promise<string[]> {
   });
 }
 
-app.listen(site.port, '127.0.0.1', () => {
+// 容器部署时需监听 0.0.0.0（端口映射无法到达容器内 127.0.0.1）；
+// 安全由宿主机只向 127.0.0.1 发布端口来保证，可用 BFF_HOST 覆盖
+const bindHost = process.env.BFF_HOST || '0.0.0.0';
+app.listen(site.port, bindHost, () => {
   // eslint-disable-next-line no-console
-  console.log(`[BFF:${site.id}] ${site.brandName} listening on http://127.0.0.1:${site.port} (web ${site.webOrigin})`);
+  console.log(`[BFF:${site.id}] ${site.brandName} listening on http://${bindHost}:${site.port} (web ${site.webOrigin})`);
 });
