@@ -1,0 +1,110 @@
+# 服务器上使用：与 .env、nginx.conf、web/{mind,nexus,train} 静态文件放在同一目录
+# 镜像 reely-idp / reely-bff 由 CI 构建后 docker load 注入，不需要 registry
+name: reely-sso
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${PG_USER:-reely}
+      POSTGRES_PASSWORD: ${PG_PASSWORD:?请在 .env 中设置 PG_PASSWORD}
+      POSTGRES_DB: ${PG_DATABASE:-reely_idp}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ['redis-server', '--appendonly', 'yes']
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  idp:
+    image: reely-idp:latest
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # 容器网络内部连线，与 .env 中的对外域名互不影响
+      IDP_INTERNAL_BASE: http://idp:4000
+      REDIS_URL: redis://redis:6379
+      PG_HOST: postgres
+      PG_PORT: '5432'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  bff-mind:
+    image: reely-bff:latest
+    restart: unless-stopped
+    command: ['npx', 'tsx', 'src/index.ts', '--site=mind']
+    env_file: .env
+    environment:
+      IDP_INTERNAL_BASE: http://idp:4000
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      idp:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  bff-nexus:
+    image: reely-bff:latest
+    restart: unless-stopped
+    command: ['npx', 'tsx', 'src/index.ts', '--site=nexus']
+    env_file: .env
+    environment:
+      IDP_INTERNAL_BASE: http://idp:4000
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      idp:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  bff-train:
+    image: reely-bff:latest
+    restart: unless-stopped
+    command: ['npx', 'tsx', 'src/index.ts', '--site=train']
+    env_file: .env
+    environment:
+      IDP_INTERNAL_BASE: http://idp:4000
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      idp:
+        condition: service_started
+      redis:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    ports:
+      - '80:80'
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./proxy_common.conf:/etc/nginx/proxy_common.conf:ro
+      - ./web/mind:/var/www/mind:ro
+      - ./web/nexus:/var/www/nexus:ro
+      - ./web/train:/var/www/train:ro
+    depends_on:
+      - idp
+      - bff-mind
+      - bff-nexus
+      - bff-train
+
+volumes:
+  pgdata:
+  redisdata:

@@ -1,0 +1,96 @@
+# 推送到 main 自动：构建前端三品牌 + 编译 IdP + 构建 Docker 镜像 + SSH 部署到服务器
+#
+# 需要在 GitHub 仓库 Settings → Secrets and variables → Actions 配置：
+#   SSH_HOST         服务器 IP 或域名
+#   SSH_PORT         SSH 端口（可选，默认 22）
+#   SSH_USER         SSH 用户
+#   SSH_PRIVATE_KEY  私钥内容（对应服务器 ~/.ssh/authorized_keys 中的公钥）
+#
+# 首次部署前，在服务器上准备一次：
+#   mkdir -p /opt/reely && cd /opt/reely
+#   # 上传 deploy/.env.example 后 cp 为 .env 并填好域名与密钥
+
+name: build-and-deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  DEPLOY_DIR: /opt/reely
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: 安装依赖
+        run: npm ci
+
+      - name: 编译 idp-server（同时作为 CI 类型检查）
+        run: npm run build --workspace idp-server
+
+      - name: 构建三个品牌前端
+        run: |
+          npm run build:mind  --workspace web && mv web/dist web/dist-mind
+          npm run build:nexus --workspace web && mv web/dist web/dist-nexus
+          npm run build:train --workspace web && mv web/dist web/dist-train
+
+      - name: 构建 Docker 镜像
+        run: |
+          docker build -f docker/idp-server.Dockerfile -t reely-idp:latest .
+          docker build -f docker/site-bff.Dockerfile -t reely-bff:latest .
+          docker save reely-idp:latest reely-bff:latest | gzip > /tmp/reely-images.tar.gz
+
+      - name: 配置 SSH
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "${SSH_PORT:-22}" "$SSH_HOST" >> ~/.ssh/known_hosts
+
+      - name: 汇集部署文件
+        run: |
+          mkdir -p deploy/web
+          cp -r web/dist-mind  deploy/web/mind
+          cp -r web/dist-nexus deploy/web/nexus
+          cp -r web/dist-train deploy/web/train
+          cp /tmp/reely-images.tar.gz deploy/reely-images.tar.gz
+
+      - name: 同步到服务器
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          rsync -az --delete \
+            -e "ssh -i ~/.ssh/deploy_key -p ${SSH_PORT:-22}" \
+            --exclude=.env \
+            deploy/ "$SSH_USER@$SSH_HOST:$DEPLOY_DIR/"
+
+      - name: 加载镜像并重启服务
+        env:
+          SSH_HOST: ${{ secrets.SSH_HOST }}
+          SSH_PORT: ${{ secrets.SSH_PORT }}
+          SSH_USER: ${{ secrets.SSH_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -p "${SSH_PORT:-22}" "$SSH_USER@$SSH_HOST" "
+            set -e
+            cd $DEPLOY_DIR
+            gunzip -c reely-images.tar.gz | docker load
+            rm reely-images.tar.gz
+            docker compose up -d --remove-orphans
+            docker image prune -f
+            docker compose ps
+          "
