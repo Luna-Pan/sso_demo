@@ -1,0 +1,247 @@
+/* ===== Reely 全局样式 · 深色玻璃拟态 + 品牌 CSS 变量 ===== */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
+
+/* 从 vite define 里拿品牌色 —— 这里用 JS 设置到 :root，
+   品牌运行时切换时也能生效。默认 mind。*/
+:root {
+  --brand-color: #3855ff;
+  --brand-color-secondary: #0ea5e9;
+  --brand-gradient: linear-gradient(135deg, #3855ff 0%, #0ea5e9 100%);
+  --brand-bg-hue: 230;
+
+  --reely-bg: #07070f;
+  --reely-bg-2: #0b0b18;
+  --reely-surface: rgba(255, 255, 255, 0.04);
+  --reely-surface-strong: rgba(255, 255, 255, 0.08);
+  --reely-border: rgba(255, 255, 255, 0.10);
+  --reely-border-strong: rgba(255, 255, 255, 0.18);
+  --reely-text: #f0f0f5;
+  --reely-text-dim: rgba(240, 240, 245, 0.65);
+  --reely-text-muted: rgba(240, 240, 245, 0.40);
+
+  --reely-radius: 20px;
+  --reely-radius-sm: 12px;
+
+  --font-display: "Inter Tight", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", system-ui, sans-serif;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  color: var(--reely-text);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: var(--reely-bg);
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* 三层 mesh 渐变背景 —— 覆盖整个视口 */
+body::before,
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body::before {
+  /* 大尺寸 radial-blob 缓慢浮动 + 品牌色相 */
+  background:
+    radial-gradient(
+      60% 50% at 15% 20%,
+      hsla(var(--brand-bg-hue), 80%, 55%, 0.18) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      55% 50% at 90% 80%,
+      hsla(calc(var(--brand-bg-hue) + 40), 70%, 50%, 0.16) 0%,
+      transparent 60%
+    ),
+    radial-gradient(
+      45% 40% at 50% 50%,
+      rgba(120, 120, 200, 0.07) 0%,
+      transparent 70%
+    ),
+    linear-gradient(180deg, #07070f 0%, #0b0b18 50%, #07070f 100%);
+  animation: blob-float 24s ease-in-out infinite alternate;
+}
+
+body::after {
+  /* 噪声纹理 SVG data URL —— 细微颗粒感 */
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='240'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 0.04 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+  mix-blend-mode: overlay;
+  opacity: 0.6;
+}
+
+@keyframes blob-float {
+  0%   { transform: translate3d(-2%, -1%, 0) scale(1); }
+  50%  { transform: translate3d(1%, 2%, 0) scale(1.04); }
+  100% { transform: translate3d(2%, 1%, 0) scale(1.02); }
+}
+
+#root {
+  position: relative;
+  z-index: 1;
+}
+
+.reely-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.reely-main {
+  flex: 1;
+  width: 100%;
+  max-width: 1120px;
+  margin: 0 auto;
+  padding: 32px 24px 80px;
+  box-sizing: border-box;
+}
+
+.reely-footer {
+  text-align: center;
+  color: var(--reely-text-muted);
+  font-size: 12px;
+  padding: 24px;
+}
+
+/* ===== 玻璃卡片通用 ===== */
+.glass-card {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(18px) saturate(1.2);
+  -webkit-backdrop-filter: blur(18px) saturate(1.2);
+  border-radius: var(--reely-radius);
+  padding: 40px;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.08) inset,
+    0 24px 60px -20px rgba(0, 0, 0, 0.6),
+    0 0 80px -30px hsla(var(--brand-bg-hue), 80%, 55%, 0.25);
+}
+
+/* ===== 品牌渐变大标题 ===== */
+.brand-title {
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(32px, 6vw, 64px);
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+.brand-title-sm {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(20px, 2.4vw, 28px);
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  margin: 0;
+}
+
+/* ===== 按钮覆写 —— antd ConfigProvider 已经接管大部分 ===== */
+.reely-btn-primary {
+  background: var(--brand-gradient) !important;
+  border: none !important;
+  border-radius: var(--reely-radius-sm) !important;
+  height: 46px !important;
+  font-weight: 600 !important;
+  box-shadow:
+    0 6px 24px -8px hsla(var(--brand-bg-hue), 80%, 55%, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset !important;
+  transition: transform 0.5s ease, box-shadow 0.5s ease !important;
+}
+
+.reely-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 10px 32px -8px hsla(var(--brand-bg-hue), 80%, 55%, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
+}
+
+.reely-btn-ghost {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.18) !important;
+  color: var(--reely-text) !important;
+  border-radius: var(--reely-radius-sm) !important;
+  height: 46px !important;
+}
+
+.reely-btn-ghost:hover {
+  border-color: var(--brand-color) !important;
+  color: var(--brand-color) !important;
+  background: rgba(255, 255, 255, 0.04) !important;
+}
+
+.reely-btn-vso {
+  background: #0078d4 !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: var(--reely-radius-sm) !important;
+  height: 46px !important;
+  font-weight: 600 !important;
+}
+
+.reely-btn-wechat {
+  background: #07c160 !important;
+  border: none !important;
+  color: #fff !important;
+  border-radius: var(--reely-radius-sm) !important;
+  height: 46px !important;
+  font-weight: 600 !important;
+}
+
+/* ===== 标签页 / 文本 ===== */
+.reely-label {
+  font-size: 13px;
+  color: var(--reely-text-dim);
+  margin-bottom: 6px;
+  display: block;
+}
+
+/* antd input 适配深色玻璃 */
+.ant-input-affix-wrapper,
+.ant-input {
+  background: rgba(255, 255, 255, 0.06) !important;
+  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: var(--reely-text) !important;
+  border-radius: 12px !important;
+}
+
+.ant-input-affix-wrapper input,
+.ant-input input {
+  color: var(--reely-text) !important;
+  background: transparent !important;
+}
+
+.ant-input:focus,
+.ant-input-affix-wrapper-focused {
+  border-color: var(--brand-color) !important;
+  box-shadow: 0 0 0 2px hsla(var(--brand-bg-hue), 80%, 55%, 0.2) !important;
+}
+
+/* ===== 在 JS 中把 vite define 注入的品牌色写入 CSS 变量 ===== */
+html[data-brand='mind']   { --brand-bg-hue: 230; }
+html[data-brand='nexus']  { --brand-bg-hue: 280; }
+html[data-brand='train']  { --brand-bg-hue: 165; }
+
+/* ===== antd reset 引入后需要保留的最小覆盖 ===== */
+.ant-app {
+  min-height: 100%;
+}

@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#0a0a12" />
+    <title>Reely</title>
+    <script>
+      // 将 vite define 注入的品牌信息同步到 window，方便运行时取
+      (function () {
+        try {
+          window.__REELY_BRAND__ = __BRAND__;
+          window.__REELY_BRAND_NAME__ = __BRAND_NAME__;
+          window.__REELY_BRAND_COLOR__ = __BRAND_COLOR__;
+          document.title = (window.__REELY_BRAND_NAME__ || 'Reely') + ' · Reely 统一身份';
+        } catch (e) {
+          document.title = 'Reely';
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
