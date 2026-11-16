@@ -2,7 +2,7 @@
   "name": "site-bff",
   "version": "1.0.0",
   "private": true,
-  "description": "Generic BFF for the three Reely business sites (OIDC relying party)",
+  "description": "Generic BFF for the three SSO business sites (OIDC relying party)",
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "start": "tsx src/index.ts"

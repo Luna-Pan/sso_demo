@@ -1,17 +1,17 @@
 # 服务器端手动部署用（配合宿主机 nginx，见同目录 nginx.conf）
 # 用法：cd deploy && cp .env.example .env（填好镜像地址/域名/密钥）&& docker compose up -d
-# 镜像来自 GHCR：ghcr.io/<仓库所有者>/reely-idp 与 reely-bff（由 GitHub Actions 构建）
+# 镜像来自 GHCR：ghcr.io/<仓库所有者>/sso-idp 与 sso-bff（由 GitHub Actions 构建）
 
-name: reely-sso
+name: sso-demo
 
 services:
   postgres:
     image: postgres:16-alpine
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${PG_USER:-reely}
+      POSTGRES_USER: ${PG_USER:-sso}
       POSTGRES_PASSWORD: ${PG_PASSWORD:?请在 .env 中设置 PG_PASSWORD}
-      POSTGRES_DB: ${PG_DATABASE:-reely_idp}
+      POSTGRES_DB: ${PG_DATABASE:-sso_idp}
     volumes:
       - pgdata:/var/lib/postgresql/data
     healthcheck:
@@ -43,9 +43,9 @@ services:
       PG_HOST: postgres
       PG_PORT: '5432'
       # IdP 服务器回调 BFF 用（backchannel logout 等），指向 BFF 容器名
-      BFF_MIND_INTERNAL: http://bff-mind:4001
-      BFF_NEXUS_INTERNAL: http://bff-nexus:4002
-      BFF_TRAIN_INTERNAL: http://bff-train:4003
+      BFF_A_INTERNAL: http://bff-a:4001
+      BFF_B_INTERNAL: http://bff-b:4002
+      BFF_C_INTERNAL: http://bff-c:4003
     ports:
       # 只发布到宿主机回环地址，供宿主机 nginx 反代；不暴露公网
       - '127.0.0.1:4000:4000'
@@ -55,10 +55,10 @@ services:
       redis:
         condition: service_healthy
 
-  bff-mind:
+  bff-a:
     image: ${IMAGE_BFF:?请在 .env 中设置 IMAGE_BFF}
     restart: unless-stopped
-    command: ['npx', 'tsx', 'src/index.ts', '--site=mind']
+    command: ['npx', 'tsx', 'src/index.ts', '--site=a']
     env_file: .env
     environment:
       IDP_INTERNAL_BASE: http://idp:4000
@@ -71,10 +71,10 @@ services:
       redis:
         condition: service_healthy
 
-  bff-nexus:
+  bff-b:
     image: ${IMAGE_BFF:?请在 .env 中设置 IMAGE_BFF}
     restart: unless-stopped
-    command: ['npx', 'tsx', 'src/index.ts', '--site=nexus']
+    command: ['npx', 'tsx', 'src/index.ts', '--site=b']
     env_file: .env
     environment:
       IDP_INTERNAL_BASE: http://idp:4000
@@ -87,10 +87,10 @@ services:
       redis:
         condition: service_healthy
 
-  bff-train:
+  bff-c:
     image: ${IMAGE_BFF:?请在 .env 中设置 IMAGE_BFF}
     restart: unless-stopped
-    command: ['npx', 'tsx', 'src/index.ts', '--site=train']
+    command: ['npx', 'tsx', 'src/index.ts', '--site=c']
     env_file: .env
     environment:
       IDP_INTERNAL_BASE: http://idp:4000

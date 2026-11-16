@@ -25,7 +25,7 @@ export class BearerGuard implements CanActivate {
 export class AdminGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const req = context.switchToHttp().getRequest();
-    if (req.headers['x-admin-token'] !== (process.env.IDP_ADMIN_TOKEN || 'reely-admin-dev')) {
+    if (req.headers['x-admin-token'] !== (process.env.IDP_ADMIN_TOKEN || 'sso-admin-dev')) {
       throw new UnauthorizedException('管理令牌无效');
     }
     return true;

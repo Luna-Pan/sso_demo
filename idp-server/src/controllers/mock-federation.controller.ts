@@ -43,7 +43,7 @@ export class MockFederationController {
     return layout(
       'VSO 创意云 · 账号授权（模拟）',
       `
-      <p class="sub">应用 <b>Reely 统一身份</b>（${clientId}）请求获取你的 VSO 账号信息<br/>授权范围：${scope || 'openid profile'}</p>
+      <p class="sub">应用 <b>SSO 统一身份</b>（${clientId}）请求获取你的 VSO 账号信息<br/>授权范围：${scope || 'openid profile'}</p>
       <div class="list">${cards}</div>
       <p class="tip">这是本地开发用的 VSO Mock 授权页；真实联调时将跳转 vsochina.com。</p>`,
       '#7c3aed',

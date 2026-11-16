@@ -13,7 +13,7 @@ async function generateSigningJwk(): Promise<Record<string, any>> {
   const { privateKey } = await generateKeyPair('RS256', { extractable: true });
   const jwk = (await exportJWK(privateKey)) as Record<string, any>;
   // kid 用时间戳保证唯一且可读（可追溯生成时间）
-  jwk.kid = `reely-idp-${Date.now()}`;
+  jwk.kid = `sso-idp-${Date.now()}`;
   jwk.alg = 'RS256';
   jwk.use = 'sig';
   return jwk;

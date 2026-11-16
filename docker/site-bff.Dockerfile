@@ -1,6 +1,6 @@
 # BFF 镜像：tsx 直跑 TS 源码，无编译产物（构建上下文 = 仓库根目录）
-# docker build -f docker/site-bff.Dockerfile -t reely-bff:latest .
-# 站点实例通过启动参数区分：--site=mind|nexus|train
+# docker build -f docker/site-bff.Dockerfile -t sso-bff:latest .
+# 站点实例通过启动参数区分：--site=a|b|c
 FROM node:20-alpine
 WORKDIR /app
 COPY package.json package-lock.json ./

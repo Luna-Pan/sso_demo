@@ -1,27 +1,27 @@
-/* ===== Reely 全局样式 · 深色玻璃拟态 + 品牌 CSS 变量 ===== */
+/* ===== SSO 全局样式 · 深色玻璃拟态 + 品牌 CSS 变量 ===== */
 
 @import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@500;700;900&family=Inter:wght@400;500;600&display=swap');
 
 /* 从 vite define 里拿品牌色 —— 这里用 JS 设置到 :root，
-   品牌运行时切换时也能生效。默认 mind。*/
+   品牌运行时切换时也能生效。默认 a。*/
 :root {
   --brand-color: #3855ff;
   --brand-color-secondary: #0ea5e9;
   --brand-gradient: linear-gradient(135deg, #3855ff 0%, #0ea5e9 100%);
   --brand-bg-hue: 230;
 
-  --reely-bg: #07070f;
-  --reely-bg-2: #0b0b18;
-  --reely-surface: rgba(255, 255, 255, 0.04);
-  --reely-surface-strong: rgba(255, 255, 255, 0.08);
-  --reely-border: rgba(255, 255, 255, 0.10);
-  --reely-border-strong: rgba(255, 255, 255, 0.18);
-  --reely-text: #f0f0f5;
-  --reely-text-dim: rgba(240, 240, 245, 0.65);
-  --reely-text-muted: rgba(240, 240, 245, 0.40);
+  --sso-bg: #07070f;
+  --sso-bg-2: #0b0b18;
+  --sso-surface: rgba(255, 255, 255, 0.04);
+  --sso-surface-strong: rgba(255, 255, 255, 0.08);
+  --sso-border: rgba(255, 255, 255, 0.10);
+  --sso-border-strong: rgba(255, 255, 255, 0.18);
+  --sso-text: #f0f0f5;
+  --sso-text-dim: rgba(240, 240, 245, 0.65);
+  --sso-text-muted: rgba(240, 240, 245, 0.40);
 
-  --reely-radius: 20px;
-  --reely-radius-sm: 12px;
+  --sso-radius: 20px;
+  --sso-radius-sm: 12px;
 
   --font-display: "Inter Tight", "Segoe UI", system-ui, sans-serif;
   --font-body: "Inter", system-ui, sans-serif;
@@ -36,10 +36,10 @@ body,
 body {
   margin: 0;
   font-family: var(--font-body);
-  color: var(--reely-text);
+  color: var(--sso-text);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: var(--reely-bg);
+  background: var(--sso-bg);
   position: relative;
   overflow-x: hidden;
 }
@@ -94,13 +94,13 @@ body::after {
   z-index: 1;
 }
 
-.reely-shell {
+.sso-shell {
   display: flex;
   flex-direction: column;
   min-height: 100%;
 }
 
-.reely-main {
+.sso-main {
   flex: 1;
   width: 100%;
   max-width: 1120px;
@@ -109,9 +109,9 @@ body::after {
   box-sizing: border-box;
 }
 
-.reely-footer {
+.sso-footer {
   text-align: center;
-  color: var(--reely-text-muted);
+  color: var(--sso-text-muted);
   font-size: 12px;
   padding: 24px;
 }
@@ -122,7 +122,7 @@ body::after {
   border: 1px solid rgba(255, 255, 255, 0.10);
   backdrop-filter: blur(18px) saturate(1.2);
   -webkit-backdrop-filter: blur(18px) saturate(1.2);
-  border-radius: var(--reely-radius);
+  border-radius: var(--sso-radius);
   padding: 40px;
   box-shadow:
     0 1px 0 rgba(255, 255, 255, 0.08) inset,
@@ -156,10 +156,10 @@ body::after {
 }
 
 /* ===== 按钮覆写 —— antd ConfigProvider 已经接管大部分 ===== */
-.reely-btn-primary {
+.sso-btn-primary {
   background: var(--brand-gradient) !important;
   border: none !important;
-  border-radius: var(--reely-radius-sm) !important;
+  border-radius: var(--sso-radius-sm) !important;
   height: 46px !important;
   font-weight: 600 !important;
   box-shadow:
@@ -168,49 +168,49 @@ body::after {
   transition: transform 0.5s ease, box-shadow 0.5s ease !important;
 }
 
-.reely-btn-primary:hover {
+.sso-btn-primary:hover {
   transform: translateY(-1px);
   box-shadow:
     0 10px 32px -8px hsla(var(--brand-bg-hue), 80%, 55%, 0.7),
     0 0 0 1px rgba(255, 255, 255, 0.08) inset !important;
 }
 
-.reely-btn-ghost {
+.sso-btn-ghost {
   background: transparent !important;
   border: 1px solid rgba(255, 255, 255, 0.18) !important;
-  color: var(--reely-text) !important;
-  border-radius: var(--reely-radius-sm) !important;
+  color: var(--sso-text) !important;
+  border-radius: var(--sso-radius-sm) !important;
   height: 46px !important;
 }
 
-.reely-btn-ghost:hover {
+.sso-btn-ghost:hover {
   border-color: var(--brand-color) !important;
   color: var(--brand-color) !important;
   background: rgba(255, 255, 255, 0.04) !important;
 }
 
-.reely-btn-vso {
+.sso-btn-vso {
   background: #0078d4 !important;
   border: none !important;
   color: #fff !important;
-  border-radius: var(--reely-radius-sm) !important;
+  border-radius: var(--sso-radius-sm) !important;
   height: 46px !important;
   font-weight: 600 !important;
 }
 
-.reely-btn-wechat {
+.sso-btn-wechat {
   background: #07c160 !important;
   border: none !important;
   color: #fff !important;
-  border-radius: var(--reely-radius-sm) !important;
+  border-radius: var(--sso-radius-sm) !important;
   height: 46px !important;
   font-weight: 600 !important;
 }
 
 /* ===== 标签页 / 文本 ===== */
-.reely-label {
+.sso-label {
   font-size: 13px;
-  color: var(--reely-text-dim);
+  color: var(--sso-text-dim);
   margin-bottom: 6px;
   display: block;
 }
@@ -220,13 +220,13 @@ body::after {
 .ant-input {
   background: rgba(255, 255, 255, 0.06) !important;
   border-color: rgba(255, 255, 255, 0.14) !important;
-  color: var(--reely-text) !important;
+  color: var(--sso-text) !important;
   border-radius: 12px !important;
 }
 
 .ant-input-affix-wrapper input,
 .ant-input input {
-  color: var(--reely-text) !important;
+  color: var(--sso-text) !important;
   background: transparent !important;
 }
 
@@ -237,9 +237,9 @@ body::after {
 }
 
 /* ===== 在 JS 中把 vite define 注入的品牌色写入 CSS 变量 ===== */
-html[data-brand='mind']   { --brand-bg-hue: 230; }
-html[data-brand='nexus']  { --brand-bg-hue: 280; }
-html[data-brand='train']  { --brand-bg-hue: 165; }
+html[data-brand='a']   { --brand-bg-hue: 230; }
+html[data-brand='b']  { --brand-bg-hue: 280; }
+html[data-brand='c']  { --brand-bg-hue: 165; }
 
 /* ===== antd reset 引入后需要保留的最小覆盖 ===== */
 .ant-app {

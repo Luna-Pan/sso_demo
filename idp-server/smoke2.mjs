@@ -57,8 +57,8 @@ async function tokenFromCode(code, verifier) {
     body: new URLSearchParams({
       grant_type: 'authorization_code',
       code,
-      client_id: 'reelymind',
-      client_secret: 'dev-secret-mind',
+      client_id: 'a',
+      client_secret: 'dev-secret-a',
       redirect_uri: REDIRECT,
       code_verifier: verifier,
     }),
@@ -70,7 +70,7 @@ function authorizeParams(verifier, extra = {}) {
   const challenge = b64url(require('node:crypto').createHash('sha256').update(verifier).digest());
   const p = new URLSearchParams({
     response_type: 'code',
-    client_id: 'reelymind',
+    client_id: 'a',
     redirect_uri: REDIRECT,
     state: 'st-' + Math.random().toString(36).slice(2, 8),
     nonce: 'n-' + Math.random().toString(36).slice(2, 8),
@@ -105,7 +105,7 @@ let vsoSub1;
     process.exit(1);
   }
   const code = new URL(final).searchParams.get('code');
-  console.log('B. VSO fed ->', code ? 'code OK, SSO cookie=' + jar.has('reely_sso') : 'FAIL ' + final);
+  console.log('B. VSO fed ->', code ? 'code OK, SSO cookie=' + jar.has('sso_sid') : 'FAIL ' + final);
   const token = await tokenFromCode(code, verifier);
   const idt = JSON.parse(Buffer.from(token.id_token.split('.')[1], 'base64url'));
   vsoSub1 = idt.sub;
@@ -123,7 +123,7 @@ let wxSub;
   const p = authorizeParams(verifier);
   const final = await follow(`${BASE}/auth/fed/wechat/start?${p}`, jar);
   const code = typeof final === 'string' ? new URL(final).searchParams.get('code') : null;
-  console.log('C. WeChat fed ->', code ? 'code OK, SSO cookie=' + jar.has('reely_sso') : 'FAIL ' + JSON.stringify(final));
+  console.log('C. WeChat fed ->', code ? 'code OK, SSO cookie=' + jar.has('sso_sid') : 'FAIL ' + JSON.stringify(final));
   const token = await tokenFromCode(code, verifier);
   const idt = JSON.parse(Buffer.from(token.id_token.split('.')[1], 'base64url'));
   wxSub = idt.sub;

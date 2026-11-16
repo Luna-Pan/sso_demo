@@ -1,17 +1,17 @@
 {
-  "name": "reely-web",
+  "name": "sso-web",
   "version": "1.0.0",
   "private": true,
-  "description": "Reely business site frontends (one codebase, three branded builds)",
+  "description": "SSO business site frontends (one codebase, three branded builds)",
   "scripts": {
     "dev": "vite",
-    "dev:mind": "vite --mode mind",
-    "dev:nexus": "vite --mode nexus",
-    "dev:train": "vite --mode train",
+    "dev:a": "vite --mode a",
+    "dev:b": "vite --mode b",
+    "dev:c": "vite --mode c",
     "build": "tsc -b && vite build",
-    "build:mind": "vite build --mode mind",
-    "build:nexus": "vite build --mode nexus",
-    "build:train": "vite build --mode train",
+    "build:a": "vite build --mode a",
+    "build:b": "vite build --mode b",
+    "build:c": "vite build --mode c",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -34,12 +34,12 @@ export default function Home() {
           {user ? (
             <>
               <Link to="/profile">
-                <Button size="large" className="reely-btn-primary">
+                <Button size="large" className="sso-btn-primary">
                   前往个人中心
                 </Button>
               </Link>
               <Link to="/">
-                <Button size="large" className="reely-btn-ghost">
+                <Button size="large" className="sso-btn-ghost">
                   返回首页
                 </Button>
               </Link>
@@ -47,12 +47,12 @@ export default function Home() {
           ) : (
             <>
               <Link to="/login">
-                <Button size="large" className="reely-btn-primary">
+                <Button size="large" className="sso-btn-primary">
                   立即登录
                 </Button>
               </Link>
               <Link to="/register">
-                <Button size="large" className="reely-btn-ghost">
+                <Button size="large" className="sso-btn-ghost">
                   创建账号
                 </Button>
               </Link>

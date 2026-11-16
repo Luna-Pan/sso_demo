@@ -1,8 +1,8 @@
 /**
- * 三站共用一套 BFF 代码，启动时以 --site=mind|nexus|train 区分实例。
+ * 三站共用一套 BFF 代码，启动时以 --site=a|b|c 区分实例。
  *
  * 换域名/部署环境无需改代码，通过环境变量覆盖（与 IdP 侧 config.ts 保持一致）：
- *   SITE_MIND_ORIGIN / SITE_NEXUS_ORIGIN / SITE_TRAIN_ORIGIN  各站浏览器侧 origin
+ *   SITE_A_ORIGIN / SITE_B_ORIGIN / SITE_C_ORIGIN  各站浏览器侧 origin
  *   IDP_ISSUER / IDP_WEB_ORIGIN / IDP_INTERNAL_BASE           IdP 相关地址
  */
 
@@ -12,7 +12,7 @@ function siteOrigin(id: string, fallback: string): string {
 }
 
 export interface SiteRuntimeConfig {
-  id: 'mind' | 'nexus' | 'train';
+  id: 'a' | 'b' | 'c';
   brandName: string;
   /** BFF 监听端口（127.0.0.1，仅供本机/Vite 代理与 IdP 服务器回调访问） */
   port: number;
@@ -26,44 +26,44 @@ export interface SiteRuntimeConfig {
 }
 
 const SITES: Record<SiteRuntimeConfig['id'], SiteRuntimeConfig> = {
-  mind: {
-    id: 'mind',
-    brandName: 'ReelyMind',
+  a: {
+    id: 'a',
+    brandName: 'A',
     port: 4001,
-    webOrigin: siteOrigin('mind', 'http://localhost:3001'),
-    clientId: 'reelymind',
-    clientSecret: 'dev-secret-mind',
-    cookieName: 'reely_mind_sid',
-    sessionSecret: 'dev-session-secret-mind',
+    webOrigin: siteOrigin('a', 'http://localhost:3001'),
+    clientId: 'a',
+    clientSecret: 'dev-secret-a',
+    cookieName: 'a_sid',
+    sessionSecret: 'dev-session-secret-a',
   },
-  nexus: {
-    id: 'nexus',
-    brandName: 'ReelyNexus',
+  b: {
+    id: 'b',
+    brandName: 'B',
     port: 4002,
-    webOrigin: siteOrigin('nexus', 'http://localhost:3002'),
-    clientId: 'reelynexus',
-    clientSecret: 'dev-secret-nexus',
-    cookieName: 'reely_nexus_sid',
-    sessionSecret: 'dev-session-secret-nexus',
+    webOrigin: siteOrigin('b', 'http://localhost:3002'),
+    clientId: 'b',
+    clientSecret: 'dev-secret-b',
+    cookieName: 'b_sid',
+    sessionSecret: 'dev-session-secret-b',
   },
-  train: {
-    id: 'train',
-    brandName: 'ReelyTrain',
+  c: {
+    id: 'c',
+    brandName: 'C',
     port: 4003,
-    webOrigin: siteOrigin('train', 'http://localhost:3003'),
-    clientId: 'reelytrain',
-    clientSecret: 'dev-secret-train',
-    cookieName: 'reely_train_sid',
-    sessionSecret: 'dev-session-secret-train',
+    webOrigin: siteOrigin('c', 'http://localhost:3003'),
+    clientId: 'c',
+    clientSecret: 'dev-secret-c',
+    cookieName: 'c_sid',
+    sessionSecret: 'dev-session-secret-c',
   },
 };
 
 export function resolveSite(): SiteRuntimeConfig {
   const arg = process.argv.find((a) => a.startsWith('--site='))?.split('=')[1] || process.env.SITE;
-  const id = (arg || 'mind') as SiteRuntimeConfig['id'];
+  const id = (arg || 'a') as SiteRuntimeConfig['id'];
   const site = SITES[id];
   if (!site) {
-    throw new Error(`未知的站点实例: ${id}（可选 mind / nexus / train）`);
+    throw new Error(`未知的站点实例: ${id}（可选 a / b / c）`);
   }
   return site;
 }

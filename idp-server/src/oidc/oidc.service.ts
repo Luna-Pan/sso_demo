@@ -44,10 +44,10 @@ export class OidcService implements OnModuleInit {
       cookies: {
         keys: config.cookieKeys,
         names: {
-          session: 'reely_sso',
-          interaction: 'reely_interaction',
-          resume: 'reely_resume',
-          state: 'reely_state',
+          session: 'sso_sid',
+          interaction: 'sso_interaction',
+          resume: 'sso_resume',
+          state: 'sso_state',
         },
         long: { httpOnly: true, secure: false, sameSite: 'lax', signed: true, path: '/' },
         short: { httpOnly: true, secure: false, sameSite: 'lax', signed: true, path: '/' },
@@ -93,7 +93,7 @@ export class OidcService implements OnModuleInit {
             <p class="muted">确认后会向所有已登录的业务站点广播全局登出指令。</p>
             ${logoutForm}
             <p class="muted" style="margin-top:24px">页面将自动确认，无需手动操作。</p>
-            </div><script>setTimeout(()=>{const f=document.querySelector('#op\\.logoutForm');if(f)f.submit();},100);</script>
+            </div><script>setTimeout(()=>{const f=document.forms[0];if(f)f.submit();},100);</script>
             </body></html>`;
           },
         },

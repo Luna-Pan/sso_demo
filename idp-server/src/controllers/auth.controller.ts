@@ -61,7 +61,7 @@ export class AuthController {
   }
 
   /**
-   * Reely 自有账号注册（AJAX 跨域调用，无页面跳转）。
+   * SSO 自有账号注册（AJAX 跨域调用，无页面跳转）。
    * 成功返回一次性 ticket，前端随后顶层跳转 /auth/bridge/establish 完成 SSO 会话建立。
    */
   @Post('register')
@@ -73,11 +73,11 @@ export class AuthController {
     if (await this.users.findByPhone(dto.phone)) {
       throw new ConflictException('该手机号已注册，请直接登录');
     }
-    const user = await this.users.createReelyUser(dto.phone, hashPassword(dto.password));
+    const user = await this.users.createLocalUser(dto.phone, hashPassword(dto.password));
     const ticket = await this.tickets.issue(user.user_id);
     await this.audit.log({
       userId: user.user_id,
-      identityType: 'reely',
+      identityType: 'local',
       action: 'register',
       success: true,
       ip,
@@ -97,7 +97,7 @@ export class AuthController {
     if (
       !(await this.rateLimit.check(`login:${phone || dto.account}`, config.rateLimit.loginPerPhone, config.rateLimit.loginWindowMs))
     ) {
-      await this.audit.log({ identityType: 'reely', action: 'login', success: false, ip, ua, detail: 'rate_limited' });
+      await this.audit.log({ identityType: 'local', action: 'login', success: false, ip, ua, detail: 'rate_limited' });
       throw new UnauthorizedException('尝试次数过多，请 15 分钟后再试');
     }
 
@@ -105,7 +105,7 @@ export class AuthController {
     const ok = !!user && verifyPassword(dto.password, user.password_hash);
 
     if (!ok || !user) {
-      await this.audit.log({ identityType: 'reely', action: 'login', success: false, ip, ua, detail: 'bad_credentials' });
+      await this.audit.log({ identityType: 'local', action: 'login', success: false, ip, ua, detail: 'bad_credentials' });
       // 统一模糊提示，防止账号枚举
       throw new UnauthorizedException('账号或密码错误');
     }
@@ -113,7 +113,7 @@ export class AuthController {
       throw new UnauthorizedException('账号状态异常，请联系管理员');
     }
 
-    await this.audit.log({ userId: user.user_id, identityType: 'reely', action: 'login', success: true, ip, ua });
+    await this.audit.log({ userId: user.user_id, identityType: 'local', action: 'login', success: true, ip, ua });
     return { ticket: await this.tickets.issue(user.user_id), userId: user.user_id };
   }
 }

@@ -19,9 +19,27 @@
  */
 import { createHash, randomBytes } from 'node:crypto';
 
-const IDP_ORIGIN = process.env.IDP_ORIGIN || 'http://localhost:4000';
-const SITE_A = process.env.SITE_A || 'http://localhost:3001';
-const SITE_B = process.env.SITE_B || 'http://localhost:3002';
+// 读取根目录 .env.local（与 dev-all.mjs 保持一致），使自定义域名场景免配置直跑
+import { existsSync, readFileSync } from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+{
+  const envLocal = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '.env.local');
+  if (existsSync(envLocal)) {
+    for (const raw of readFileSync(envLocal, 'utf8').split(/\r?\n/)) {
+      const line = raw.trim();
+      if (!line || line.startsWith('#')) continue;
+      const m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+      if (!m) continue;
+      if (process.env[m[1]] === undefined) process.env[m[1]] = m[2].trim().replace(/^['"]|['"]$/g, '');
+    }
+  }
+}
+
+const IDP_ORIGIN = process.env.IDP_ORIGIN || (process.env.IDP_ISSUER ? new URL(process.env.IDP_ISSUER).origin : 'http://localhost:4000');
+
+const SITE_A = process.env.SITE_A || process.env.SITE_A_ORIGIN || 'http://localhost:3001';
+const SITE_B = process.env.SITE_B || process.env.SITE_B_ORIGIN || 'http://localhost:3002';
 const ACCOUNT = process.env.SSO_ACCOUNT || '13800000001';
 const PASSWORD = process.env.SSO_PASSWORD || 'test12345';
 
@@ -173,7 +191,7 @@ if (passed) {
     console.log('   · IdP 返回 400（redirect_uri mismatch）→ 站点实际地址与 IdP 注册的 redirect_uri 不一致。');
     console.log('     核对 idp-server/src/config.ts 的 sites[].webOrigin 与浏览器地址栏完全一致（含协议、端口）。');
   } else if (String(landB.body || '').includes('error=login_required')) {
-    console.log('   · IdP 认为没有 SSO 会话 → 浏览器没把 reely_sso Cookie 带到 IdP 域。');
+    console.log('   · IdP 认为没有 SSO 会话 → 浏览器没把 sso_sid Cookie 带到 IdP 域。');
     console.log('     核对 IdP 的 issuer 主机名与 B 站跳转目标是否同域；Cookie 不会跨域共享。');
   } else {
     console.log('   · 请对照上面的跳转链路，定位第一个不符合预期的步骤。');

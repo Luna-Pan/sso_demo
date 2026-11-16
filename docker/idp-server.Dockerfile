@@ -1,5 +1,5 @@
 # IdP 服务镜像（构建上下文 = 仓库根目录，npm workspaces）
-# docker build -f docker/idp-server.Dockerfile -t reely-idp:latest .
+# docker build -f docker/idp-server.Dockerfile -t sso-idp:latest .
 FROM node:20-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json ./

@@ -17,3 +17,6 @@ web/vite.config.d.ts
 deploy/.env
 deploy/web/
 
+# 本地个人开发配置（自定义域名等，不入库）
+.env.local
+

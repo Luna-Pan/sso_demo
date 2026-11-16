@@ -188,7 +188,7 @@ export class FederationService {
     // 已登录用户在个人中心发起绑定
     if (bindSub) {
       if (existing && existing.user_id !== bindSub) {
-        return { userId: '', created: false, error: '该第三方账号已绑定其他 Reely 账号，无法重复绑定' };
+        return { userId: '', created: false, error: '该第三方账号已绑定其他本地账号，无法重复绑定' };
       }
       if (existing && existing.user_id === bindSub) {
         return { userId: bindSub, created: false };

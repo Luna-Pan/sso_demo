@@ -1,7 +1,7 @@
 // BFF 端到端：BFF 参数 -> IdP 登录桥接 -> BFF 回调建本站会话 -> /me -> 代理接口
 // -> 第二站静默免登 -> 全局登出 -> back-channel 同步销毁
 const IDP = 'http://127.0.0.1:4000';
-const BFF = { mind: 'http://127.0.0.1:4001', nexus: 'http://127.0.0.1:4002', train: 'http://127.0.0.1:4003' };
+const BFF = { a: 'http://127.0.0.1:4001', b: 'http://127.0.0.1:4002', c: 'http://127.0.0.1:4003' };
 
 function makeJar() {
   const jar = new Map();
@@ -85,7 +85,7 @@ async function follow(url, jar, hops = 0) {
 
 // ---------- 1. BFF 预取 OIDC 参数 ----------
 const jar = makeJar();
-let r = await get(`${BFF.mind}/auth/oidc-params`, jar);
+let r = await get(`${BFF.a}/auth/oidc-params`, jar);
 const params = await r.json();
 console.log('1. oidc-params -> clientId=' + params.clientId, 'state=' + params.state.slice(0, 6));
 
@@ -105,12 +105,12 @@ const land = await follow(bridge.toString(), jar);
 console.log('3. bridge+callback -> ' + land.status + ' ' + land.url);
 
 // ---------- 4. /auth/me ----------
-r = await get(`${BFF.mind}/auth/me`, jar);
+r = await get(`${BFF.a}/auth/me`, jar);
 const me = await r.json();
 console.log('4. me -> status=' + r.status + ' ' + (me.loggedIn ? `${me.user.nickname} / ${me.user.phone}` : me));
 
 // ---------- 5. 代理 IdP 账号接口 ----------
-r = await get(`${BFF.mind}/idp-api/bindings`, jar);
+r = await get(`${BFF.a}/idp-api/bindings`, jar);
 const binds = await r.json();
 console.log(
   '5. bindings proxy -> status=' + r.status + ' ids=[' +
@@ -118,44 +118,44 @@ console.log(
     ']',
 );
 
-// ---------- 6. 第二站 nexus 静默免登（全新本站 cookie，但复制 IdP SSO cookie）----------
+// ---------- 6. 第二站 b 静默免登（全新本站 cookie，但复制 IdP SSO cookie）----------
 const jar2 = makeJar();
 for (const [k, v] of [...jar.header().split('; ').map((s) => s.trim()).filter(Boolean).map((s) => {
   const i = s.indexOf('=');
   return [s.slice(0, i), s.slice(i + 1)];
 })]) {
-  if (k.startsWith('reely_sso')) jar2.apply({ headers: { getSetCookie: () => [`${k}=${v}`] } });
+  if (k.startsWith('sso_sid')) jar2.apply({ headers: { getSetCookie: () => [`${k}=${v}`] } });
 }
-const nexusStart = await follow(`${BFF.nexus}/login/start?next=/dashboard`, jar2);
-r = await get(`${BFF.nexus}/auth/me`, jar2);
+const bStart = await follow(`${BFF.b}/login/start?next=/dashboard`, jar2);
+r = await get(`${BFF.b}/auth/me`, jar2);
 const me2 = await r.json();
 console.log(
-  '6. nexus silent SSO -> ' +
-    nexusStart.status +
+  '6. b silent SSO -> ' +
+    bStart.status +
     ' | me: ' +
     (me2.loggedIn ? `${me2.user.nickname} / ${me2.user.phone}` : 'NOT LOGGED IN (FAIL)'),
 );
 
-// ---------- 7. 全局登出（mind 发起）----------
-const gl = await follow(`${BFF.mind}/auth/logout/global`, jar);
+// ---------- 7. 全局登出（a 发起）----------
+const gl = await follow(`${BFF.a}/auth/logout/global`, jar);
 console.log('7. global logout -> ' + gl.status + ' ' + (gl.url || ''));
 await new Promise((d) => setTimeout(d, 1200)); // back-channel 需要服务器间通信时间
 
 // ---------- 8. 两站均应失效 ----------
-r = await get(`${BFF.mind}/auth/me`, jar);
-const meMindAfter = await r.json();
-console.log('8a. mind me after global logout -> ' + r.status + ' loggedIn=' + meMindAfter.loggedIn);
+r = await get(`${BFF.a}/auth/me`, jar);
+const meAAfter = await r.json();
+console.log('8a. A me after global logout -> ' + r.status + ' loggedIn=' + meAAfter.loggedIn);
 
-r = await get(`${BFF.nexus}/auth/me`, jar2);
-const meNexusAfter = await r.json();
+r = await get(`${BFF.b}/auth/me`, jar2);
+const meBAfter = await r.json();
 console.log(
-  '8b. nexus me after back-channel -> ' +
+  '8b. b me after back-channel -> ' +
     r.status +
     ' loggedIn=' +
-    meNexusAfter.loggedIn +
-    (meNexusAfter.loggedIn ? ' (FAIL: back-channel did NOT arrive)' : ' (back-channel OK)'),
+    meBAfter.loggedIn +
+    (meBAfter.loggedIn ? ' (FAIL: back-channel did NOT arrive)' : ' (back-channel OK)'),
 );
 
 console.log('\n=== 最终结果 ===');
-console.log('mind global logout -> ' + (!meMindAfter.loggedIn ? 'OK' : 'FAIL'));
-console.log('nexus back-channel -> ' + (!meNexusAfter.loggedIn ? 'OK' : 'FAIL'));
+console.log('A global logout -> ' + (!meAAfter.loggedIn ? 'OK' : 'FAIL'));
+console.log('B back-channel -> ' + (!meBAfter.loggedIn ? 'OK' : 'FAIL'));

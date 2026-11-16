@@ -24,7 +24,7 @@ const ticket = loginJson.ticket;
 const verifier = b64url(crypto.getRandomValues(new Uint8Array(48)));
 const challenge = b64url(await crypto.subtle.digest('SHA-256', Buffer.from(verifier)));
 
-let cur = `${IDP}/auth/bridge/establish?ticket=${ticket}&client_id=reelymind&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fauth%2Fcallback&state=s&nonce=n&code_challenge=${challenge}&code_challenge_method=S256&scope=openid%20profile%20phone`;
+let cur = `${IDP}/auth/bridge/establish?ticket=${ticket}&client_id=a&redirect_uri=http%3A%2F%2Flocalhost%3A3001%2Fauth%2Fcallback&state=s&nonce=n&code_challenge=${challenge}&code_challenge_method=S256&scope=openid%20profile%20phone`;
 let code;
 for (let i = 0; i < 8; i++) {
   const res = await go(cur);
@@ -47,7 +47,7 @@ r = await fetch(`${IDP}/auth/token`, {
   method: 'POST', headers: { 'content-type': 'application/x-www-form-urlencoded' },
   body: new URLSearchParams({
     grant_type: 'authorization_code', code,
-    client_id: 'reelymind', client_secret: 'dev-secret-mind',
+    client_id: 'a', client_secret: 'dev-secret-a',
     redirect_uri: 'http://localhost:3001/auth/callback', code_verifier: verifier,
   }),
 });
@@ -65,7 +65,7 @@ for (const variant of ['with_hint', 'with_client_id', 'both']) {
       console.log('  decode OK sub=' + decoded.sub + ' aud=' + decoded.aud);
     } catch (e) { console.log('  decode FAIL ' + e.message); }
   }
-  if (variant === 'with_client_id' || variant === 'both') qs.set('client_id', 'reelymind');
+  if (variant === 'with_client_id' || variant === 'both') qs.set('client_id', 'a');
   if (variant !== 'with_client_id') qs.set('post_logout_redirect_uri', 'http://localhost:3001/auth/logout/cb');
   const u = `${IDP}/auth/logout?${qs.toString()}`;
   console.log('  url len:', u.length);

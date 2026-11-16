@@ -71,7 +71,7 @@ export default function Header() {
               {runtimeBrand.brandName}
             </span>
             <span style={{ fontSize: 11, color: 'rgba(240,240,245,0.55)', letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-              Reely · SSO
+              SSO
             </span>
           </div>
         </Link>
@@ -81,7 +81,7 @@ export default function Header() {
           {user ? (
             <>
               <Link to="/profile" style={{ color: 'inherit', textDecoration: 'none' }}>
-                <Button className="reely-btn-ghost">
+                <Button className="sso-btn-ghost">
                   个人中心 · {user.nickname ?? user.username ?? user.id.slice(0, 8)}
                 </Button>
               </Link>
@@ -101,10 +101,10 @@ export default function Header() {
           ) : (
             <>
               <Link to="/register">
-                <Button className="reely-btn-ghost">注册</Button>
+                <Button className="sso-btn-ghost">注册</Button>
               </Link>
               <Link to="/login">
-                <Button className="reely-btn-primary">登录</Button>
+                <Button className="sso-btn-primary">登录</Button>
               </Link>
             </>
           )}

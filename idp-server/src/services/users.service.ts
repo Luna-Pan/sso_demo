@@ -1,8 +1,8 @@
 import { randomUUID } from 'node:crypto';
-import { execute, IdentityBindRow, queryAll, queryOne, ReelyUserRow } from '../db/database';
+import { execute, IdentityBindRow, queryAll, queryOne, SsoUserRow } from '../db/database';
 import { hashPassword } from '../common/crypto';
 
-export type IdentityType = 'reely' | 'vso' | 'wechat';
+export type IdentityType = 'local' | 'vso' | 'wechat';
 
 export interface ExternalProfile {
   nickname?: string;
@@ -14,25 +14,25 @@ export interface ExternalProfile {
 export class UsersService {
   // ---------- 主账号 ----------
 
-  async findById(userId: string): Promise<ReelyUserRow | undefined> {
-    return queryOne<ReelyUserRow>('SELECT * FROM reely_user WHERE user_id = $1', [userId]);
+  async findById(userId: string): Promise<SsoUserRow | undefined> {
+    return queryOne<SsoUserRow>('SELECT * FROM sso_user WHERE user_id = $1', [userId]);
   }
 
-  async findByPhone(phone: string): Promise<ReelyUserRow | undefined> {
-    return queryOne<ReelyUserRow>('SELECT * FROM reely_user WHERE phone = $1', [phone]);
+  async findByPhone(phone: string): Promise<SsoUserRow | undefined> {
+    return queryOne<SsoUserRow>('SELECT * FROM sso_user WHERE phone = $1', [phone]);
   }
 
-  async createReelyUser(phone: string, passwordHash: string, nickname?: string): Promise<ReelyUserRow> {
+  async createLocalUser(phone: string, passwordHash: string, nickname?: string): Promise<SsoUserRow> {
     const now = Math.floor(Date.now() / 1000);
     const userId = randomUUID();
     await execute(
-      `INSERT INTO reely_user (user_id, phone, password_hash, nickname, avatar, status, created_at, updated_at)
+      `INSERT INTO sso_user (user_id, phone, password_hash, nickname, avatar, status, created_at, updated_at)
        VALUES ($1, $2, $3, $4, NULL, 'active', $5, $6)`,
       [userId, phone, passwordHash, nickname || `用户${phone.slice(-4)}`, now, now],
     );
 
     // 自有身份绑定
-    await this.addBind(userId, 'reely', phone, null, null);
+    await this.addBind(userId, 'local', phone, null, null);
     return (await this.findById(userId))!;
   }
 
@@ -41,7 +41,7 @@ export class UsersService {
     type: IdentityType,
     externalId: string,
     profile: ExternalProfile = {},
-  ): Promise<{ user: ReelyUserRow; created: boolean }> {
+  ): Promise<{ user: SsoUserRow; created: boolean }> {
     const existing = await this.findBind(type, externalId);
     if (existing) {
       const user = await this.findById(existing.user_id);
@@ -60,7 +60,7 @@ export class UsersService {
     const now = Math.floor(Date.now() / 1000);
     const userId = randomUUID();
     await execute(
-      `INSERT INTO reely_user (user_id, phone, password_hash, nickname, avatar, status, created_at, updated_at)
+      `INSERT INTO sso_user (user_id, phone, password_hash, nickname, avatar, status, created_at, updated_at)
        VALUES ($1, NULL, NULL, $2, $3, 'active', $4, $5)`,
       [userId, profile.nickname || `${type === 'vso' ? 'VSO' : '微信'}用户`, profile.avatar || null, now, now],
     );
@@ -70,7 +70,7 @@ export class UsersService {
 
   async updateProfile(
     userId: string,
-    patch: Partial<Pick<ReelyUserRow, 'nickname' | 'avatar' | 'phone' | 'password_hash' | 'status'>>,
+    patch: Partial<Pick<SsoUserRow, 'nickname' | 'avatar' | 'phone' | 'password_hash' | 'status'>>,
   ) {
     const fields: string[] = [];
     const values: any[] = [];
@@ -83,7 +83,7 @@ export class UsersService {
     fields.push(`updated_at = $${n++}`);
     values.push(Math.floor(Date.now() / 1000));
     values.push(userId);
-    await execute(`UPDATE reely_user SET ${fields.join(', ')} WHERE user_id = $${n}`, values);
+    await execute(`UPDATE sso_user SET ${fields.join(', ')} WHERE user_id = $${n}`, values);
   }
 
   async setPassword(userId: string, password: string) {
@@ -92,7 +92,7 @@ export class UsersService {
 
   async bindPhone(userId: string, phone: string) {
     await this.updateProfile(userId, { phone });
-    await this.addBind(userId, 'reely', phone, null, null);
+    await this.addBind(userId, 'local', phone, null, null);
   }
 
   // ---------- 身份绑定 ----------
@@ -132,13 +132,13 @@ export class UsersService {
    * 若账号没有密码，则至少保留一个外部身份。
    */
   async unbind(userId: string, type: IdentityType, externalId: string): Promise<{ ok: boolean; message?: string }> {
-    if (type === 'reely') {
+    if (type === 'local') {
       return { ok: false, message: '自有账号身份不可解绑' };
     }
     const user = await this.findById(userId);
     if (!user) return { ok: false, message: '用户不存在' };
 
-    const externalBinds = (await this.listBinds(userId)).filter((b) => b.identity_type !== 'reely');
+    const externalBinds = (await this.listBinds(userId)).filter((b) => b.identity_type !== 'local');
     if (!user.password_hash && externalBinds.length <= 1) {
       return { ok: false, message: '该账号尚未设置密码，且这是唯一的外部登录方式，禁止解绑' };
     }
@@ -150,20 +150,20 @@ export class UsersService {
   }
 
   /** 账号剩余可登录身份数量（用于解绑判断） */
-  async loginMeansCount(user: ReelyUserRow): Promise<number> {
-    const external = (await this.listBinds(user.user_id)).filter((b) => b.identity_type !== 'reely').length;
+  async loginMeansCount(user: SsoUserRow): Promise<number> {
+    const external = (await this.listBinds(user.user_id)).filter((b) => b.identity_type !== 'local').length;
     return external + (user.password_hash && user.phone ? 1 : 0);
   }
 
   // ---------- 管理端 ----------
 
-  async searchUsers(keyword?: string, limit = 50): Promise<ReelyUserRow[]> {
+  async searchUsers(keyword?: string, limit = 50): Promise<SsoUserRow[]> {
     if (keyword) {
-      return queryAll<ReelyUserRow>(
-        'SELECT * FROM reely_user WHERE phone LIKE $1 OR nickname LIKE $1 OR user_id LIKE $1 ORDER BY created_at DESC LIMIT $2',
+      return queryAll<SsoUserRow>(
+        'SELECT * FROM sso_user WHERE phone LIKE $1 OR nickname LIKE $1 OR user_id LIKE $1 ORDER BY created_at DESC LIMIT $2',
         [`%${keyword}%`, limit],
       );
     }
-    return queryAll<ReelyUserRow>('SELECT * FROM reely_user ORDER BY created_at DESC LIMIT $1', [limit]);
+    return queryAll<SsoUserRow>('SELECT * FROM sso_user ORDER BY created_at DESC LIMIT $1', [limit]);
   }
 }

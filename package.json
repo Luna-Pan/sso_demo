@@ -1,8 +1,8 @@
 {
-  "name": "reely-sso",
+  "name": "sso-demo",
   "private": true,
   "version": "1.0.0",
-  "description": "Reely unified SSO identity platform (IdP + 3 business sites)",
+  "description": "SSO demo platform (IdP + 3 business sites)",
   "workspaces": [
     "idp-server",
     "site-bff",
@@ -11,12 +11,12 @@
   "scripts": {
     "build": "npm run build --workspace idp-server",
     "dev:idp": "npm run dev --workspace idp-server",
-    "dev:bff:mind": "npm run dev --workspace site-bff -- --site=mind",
-    "dev:bff:nexus": "npm run dev --workspace site-bff -- --site=nexus",
-    "dev:bff:train": "npm run dev --workspace site-bff -- --site=train",
-    "dev:web:mind": "npm run dev --workspace web -- --mode=mind",
-    "dev:web:nexus": "npm run dev --workspace web -- --mode=nexus",
-    "dev:web:train": "npm run dev --workspace web -- --mode=train",
+    "dev:bff:a": "npm run dev --workspace site-bff -- --site=a",
+    "dev:bff:b": "npm run dev --workspace site-bff -- --site=b",
+    "dev:bff:c": "npm run dev --workspace site-bff -- --site=c",
+    "dev:web:a": "npm run dev --workspace web -- --mode=a",
+    "dev:web:b": "npm run dev --workspace web -- --mode=b",
+    "dev:web:c": "npm run dev --workspace web -- --mode=c",
     "start:all": "node scripts/dev-all.mjs",
     "check:sso": "node scripts/sso-check.mjs"
   }

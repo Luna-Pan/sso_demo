@@ -42,10 +42,10 @@ function LoggedOutToast() {
 
 export default function AppRoutes() {
   return (
-    <div className="reely-shell">
+    <div className="sso-shell">
       <LoggedOutToast />
       <Header />
-      <main className="reely-main">
+      <main className="sso-main">
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
@@ -61,8 +61,8 @@ export default function AppRoutes() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
-      <footer className="reely-footer">
-        © {new Date().getFullYear()} Reely · 统一身份认证演示
+      <footer className="sso-footer">
+        © {new Date().getFullYear()} SSO · 统一身份认证演示
       </footer>
     </div>
   );

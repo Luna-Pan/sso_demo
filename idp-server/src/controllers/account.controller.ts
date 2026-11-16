@@ -45,7 +45,7 @@ class PhoneDto {
 }
 
 function maskExternal(type: string, id: string): string {
-  if (type === 'reely') return id;
+  if (type === 'local') return id;
   if (id.length <= 8) return id;
   return `${id.slice(0, 4)}****${id.slice(-4)}`;
 }
@@ -108,7 +108,7 @@ export class AccountController {
     return { ok: true };
   }
 
-  /** 绑定手机号（短信验证，绑定后同时建立 reely 身份记录） */
+  /** 绑定手机号（短信验证，绑定后同时建立 sso 身份记录） */
   @Post('phone')
   @HttpCode(200)
   async bindPhone(@Req() req: any, @Body() dto: PhoneDto) {

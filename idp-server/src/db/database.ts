@@ -1,7 +1,7 @@
 import { Pool } from 'pg';
 import { config } from '../config';
 
-export interface ReelyUserRow {
+export interface SsoUserRow {
   user_id: string;
   phone: string | null;
   password_hash: string | null;
@@ -15,7 +15,7 @@ export interface ReelyUserRow {
 export interface IdentityBindRow {
   id: number;
   user_id: string;
-  identity_type: 'reely' | 'vso' | 'wechat';
+  identity_type: 'local' | 'vso' | 'wechat';
   external_unique_id: string;
   unionid: string | null;
   raw_profile: string | null;
@@ -48,7 +48,7 @@ interface Migration {
 
 /** v1 基线 = 原 8 表结构（不含已迁往 Redis 的三张短时表） */
 const BASELINE_SCHEMA = `
-CREATE TABLE IF NOT EXISTS reely_user (
+CREATE TABLE IF NOT EXISTS sso_user (
   user_id       TEXT PRIMARY KEY,
   phone         TEXT UNIQUE,
   password_hash TEXT,
@@ -130,7 +130,7 @@ const MIGRATIONS: Migration[] = [
         created_at BIGINT NOT NULL
       )`);
       await db.query(`INSERT INTO key_store_v2 (kid, jwk, created_at)
-                      SELECT COALESCE(jwk::jsonb->>'kid', 'reely-idp-legacy'), jwk, created_at FROM key_store`);
+                      SELECT COALESCE(jwk::jsonb->>'kid', 'sso-idp-legacy'), jwk, created_at FROM key_store`);
       await db.query('DROP TABLE key_store');
       await db.query('ALTER TABLE key_store_v2 RENAME TO key_store');
     },
@@ -155,7 +155,7 @@ async function runMigrations(): Promise<void> {
   // 老库升级：已有业务表但没有迁移记录 → 视为 v1 基线已存在，补记后只跑增量
   const applied = await queryOne<{ c: string }>('SELECT COUNT(*) AS c FROM schema_migrations');
   if (Number(applied?.c || 0) === 0) {
-    const legacy = await queryOne<{ t: string | null }>("SELECT to_regclass('public.reely_user')::text AS t");
+    const legacy = await queryOne<{ t: string | null }>("SELECT to_regclass('public.sso_user')::text AS t");
     if (legacy?.t) {
       await execute("INSERT INTO schema_migrations (version, name, applied_at) VALUES (1, 'baseline', $1)", [
         Math.floor(Date.now() / 1000),

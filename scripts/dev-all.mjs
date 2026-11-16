@@ -1,23 +1,40 @@
 #!/usr/bin/env node
 /**
- * dev-all.mjs — 一键启动 Reely 本地开发所需的全部 7 个进程
+ * dev-all.mjs — 一键启动 SSO 本地开发所需的全部 7 个进程
  *   IdP (NestJS)         → http://localhost:4000
- *   BFF:mind             → 127.0.0.1:4001
- *   BFF:nexus            → 127.0.0.1:4002
- *   BFF:train            → 127.0.0.1:4003
- *   Vite:ReelyMind       → http://localhost:3001
- *   Vite:ReelyNexus      → http://localhost:3002
- *   Vite:ReelyTrain      → http://localhost:3003
+ *   BFF:a                → 127.0.0.1:4001
+ *   BFF:b                → 127.0.0.1:4002
+ *   BFF:c                → 127.0.0.1:4003
+ *   Vite:A               → http://localhost:3001
+ *   Vite:B               → http://localhost:3002
+ *   Vite:C               → http://localhost:3003
  *
  * Windows 下直接 `node scripts/dev-all.mjs`（或根目录 `npm run dev:all`）。
  * Ctrl+C 会一次性杀死所有子进程。
  */
 import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { existsSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(__dirname, '..');
+
+// 读取根目录 .env.local（若存在）并注入 process.env —— 子进程通过 {...process.env} 继承，
+// 使 IdP/BFF 的 SITE_*_ORIGIN、IDP_ISSUER 等覆盖项对整套本地栈生效。已存在的环境变量优先。
+const envLocal = path.join(root, '.env.local');
+if (existsSync(envLocal)) {
+  for (const raw of readFileSync(envLocal, 'utf8').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const m = line.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if (!m) continue;
+    let v = m[2].trim();
+    if ((v.startsWith('"') && v.endsWith('"')) || (v.startsWith("'") && v.endsWith("'"))) v = v.slice(1, -1);
+    if (process.env[m[1]] === undefined) process.env[m[1]] = v;
+  }
+  process.stdout.write(`\x1b[2m[dev-all] loaded ${path.basename(envLocal)}\x1b[0m\n`);
+}
 
 const services = [
   {
@@ -25,52 +42,52 @@ const services = [
     cwd: path.join(root, 'idp-server'),
     cmd: 'node',
     args: ['dist/main.js'],
-    ready: (out) => out.includes('[IdP] Reely IdP started'),
+    ready: (out) => out.includes('[IdP] SSO IdP started'),
     note: '首次使用前需 `npm run build --workspace idp-server`',
   },
   {
-    name: 'BFF:mind',
+    name: 'BFF:a',
     cwd: path.join(root, 'site-bff'),
     cmd: path.join(root, 'node_modules/.bin/tsx' + (process.platform === 'win32' ? '.cmd' : '')),
-    args: ['src/index.ts', '--site=mind'],
-    ready: (out) => out.includes('[BFF:mind]'),
+    args: ['src/index.ts', '--site=a'],
+    ready: (out) => out.includes('[BFF:a]'),
   },
   {
-    name: 'BFF:nexus',
+    name: 'BFF:b',
     cwd: path.join(root, 'site-bff'),
     cmd: path.join(root, 'node_modules/.bin/tsx' + (process.platform === 'win32' ? '.cmd' : '')),
-    args: ['src/index.ts', '--site=nexus'],
-    ready: (out) => out.includes('[BFF:nexus]'),
+    args: ['src/index.ts', '--site=b'],
+    ready: (out) => out.includes('[BFF:b]'),
   },
   {
-    name: 'BFF:train',
+    name: 'BFF:c',
     cwd: path.join(root, 'site-bff'),
     cmd: path.join(root, 'node_modules/.bin/tsx' + (process.platform === 'win32' ? '.cmd' : '')),
-    args: ['src/index.ts', '--site=train'],
-    ready: (out) => out.includes('[BFF:train]'),
+    args: ['src/index.ts', '--site=c'],
+    ready: (out) => out.includes('[BFF:c]'),
   },
   {
-    name: 'Vite:ReelyMind',
+    name: 'Vite:A',
     cwd: path.join(root, 'web'),
     cmd: path.join(root, 'node_modules/.bin/vite' + (process.platform === 'win32' ? '.cmd' : '')),
     args: [],
-    env: { ...process.env, BRAND: 'mind' },
+    env: { ...process.env, BRAND: 'a' },
     ready: (out) => out.includes('Local:') && out.includes(':3001'),
   },
   {
-    name: 'Vite:ReelyNexus',
+    name: 'Vite:B',
     cwd: path.join(root, 'web'),
     cmd: path.join(root, 'node_modules/.bin/vite' + (process.platform === 'win32' ? '.cmd' : '')),
     args: [],
-    env: { ...process.env, BRAND: 'nexus' },
+    env: { ...process.env, BRAND: 'b' },
     ready: (out) => out.includes('Local:') && out.includes(':3002'),
   },
   {
-    name: 'Vite:ReelyTrain',
+    name: 'Vite:C',
     cwd: path.join(root, 'web'),
     cmd: path.join(root, 'node_modules/.bin/vite' + (process.platform === 'win32' ? '.cmd' : '')),
     args: [],
-    env: { ...process.env, BRAND: 'train' },
+    env: { ...process.env, BRAND: 'c' },
     ready: (out) => out.includes('Local:') && out.includes(':3003'),
   },
 ];
@@ -151,7 +168,7 @@ process.on('SIGTERM', () => cleanup(0));
 process.on('exit', () => cleanup(0));
 
 async function main() {
-  process.stdout.write('\n\x1b[1m=== Reely local dev — 7 services ===\x1b[0m\n\n');
+  process.stdout.write('\n\x1b[1m=== SSO local dev — 7 services ===\x1b[0m\n\n');
   const results = [];
   for (const svc of services) {
     process.stdout.write(`${WAIT} ${pad(svc.name)} starting...`);
@@ -167,9 +184,9 @@ async function main() {
   if (fail) process.stdout.write(`, \x1b[31m${fail} FAIL\x1b[0m`);
   process.stdout.write('\x1b[0m\n\n');
   process.stdout.write('  IdP      http://localhost:4000\n');
-  process.stdout.write('  Mind     http://localhost:3001\n');
-  process.stdout.write('  Nexus    http://localhost:3002\n');
-  process.stdout.write('  Train    http://localhost:3003\n\n');
+  process.stdout.write('  A        http://localhost:3001\n');
+  process.stdout.write('  B        http://localhost:3002\n');
+  process.stdout.write('  C        http://localhost:3003\n\n');
   process.stdout.write('\x1b[2mCtrl+C to stop all.\x1b[0m\n\n');
 
   if (fail) cleanup(1);

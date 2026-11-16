@@ -38,18 +38,18 @@ jobs:
 
       - name: 构建三个品牌前端
         run: |
-          npm run build:mind  --workspace web && mv web/dist web/dist-mind
-          npm run build:nexus --workspace web && mv web/dist web/dist-nexus
-          npm run build:train --workspace web && mv web/dist web/dist-train
+          npm run build:a  --workspace web && mv web/dist web/dist-a
+          npm run build:b --workspace web && mv web/dist web/dist-b
+          npm run build:c --workspace web && mv web/dist web/dist-c
           mkdir -p deploy/web
-          mv web/dist-mind  deploy/web/mind
-          mv web/dist-nexus deploy/web/nexus
-          mv web/dist-train deploy/web/train
+          mv web/dist-a  deploy/web/a
+          mv web/dist-b deploy/web/b
+          mv web/dist-c deploy/web/c
 
       - name: 上传前端静态产物
         uses: actions/upload-artifact@v4
         with:
-          name: reely-web-static
+          name: sso-web-static
           path: deploy/web
           retention-days: 14
 
@@ -62,16 +62,16 @@ jobs:
           PREFIX: ${{ steps.prefix.outputs.prefix }}
         run: |
           docker build -f docker/idp-server.Dockerfile \
-            -t $PREFIX/reely-idp:latest -t $PREFIX/reely-idp:run-${{ github.run_number }} .
+            -t $PREFIX/sso-idp:latest -t $PREFIX/sso-idp:run-${{ github.run_number }} .
           docker build -f docker/site-bff.Dockerfile \
-            -t $PREFIX/reely-bff:latest -t $PREFIX/reely-bff:run-${{ github.run_number }} .
+            -t $PREFIX/sso-bff:latest -t $PREFIX/sso-bff:run-${{ github.run_number }} .
 
       - name: 登录 GHCR 并推送
         env:
           PREFIX: ${{ steps.prefix.outputs.prefix }}
         run: |
           echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-          docker push $PREFIX/reely-idp:latest
-          docker push $PREFIX/reely-idp:run-${{ github.run_number }}
-          docker push $PREFIX/reely-bff:latest
-          docker push $PREFIX/reely-bff:run-${{ github.run_number }}
+          docker push $PREFIX/sso-idp:latest
+          docker push $PREFIX/sso-idp:run-${{ github.run_number }}
+          docker push $PREFIX/sso-bff:latest
+          docker push $PREFIX/sso-bff:run-${{ github.run_number }}

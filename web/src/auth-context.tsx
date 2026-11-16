@@ -33,7 +33,7 @@ interface AuthContextValue extends AuthState {
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
-const SKIP_BOOT_KEY = 'reely.auth.skipBoot';
+const SKIP_BOOT_KEY = 'sso.auth.skipBoot';
 
 function readSkipBoot(): boolean {
   try {

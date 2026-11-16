@@ -3,19 +3,19 @@
  *
  * 域名规划（本地）：
  *   IdP            http://localhost:4000   (issuer = http://localhost:4000/auth)
- *   ReelyMind 站点 http://localhost:3001   BFF 127.0.0.1:4001
- *   ReelyNexus站点 http://localhost:3002   BFF 127.0.0.1:4002
- *   ReelyTrain站点 http://localhost:3003   BFF 127.0.0.1:4003
+ *   A 站点 http://localhost:3001   BFF 127.0.0.1:4001
+ *   B 站点 http://localhost:3002   BFF 127.0.0.1:4002
+ *   C 站点 http://localhost:3003   BFF 127.0.0.1:4003
  *
  * 注意：sites[].webOrigin 必须与「浏览器实际访问的站点地址」完全一致，
  * 它同时用于 OIDC redirect_uri 注册与 CORS 白名单；不一致时 IdP 会以
  * redirect_uri mismatch 拒绝授权（表现为停留在 IdP 错误页 / 站点一直未登录）。
  *
  * 换域名/部署环境无需改代码，通过环境变量覆盖即可：
- *   IDP_ISSUER        IdP 对外发行者，如 https://sso.reely.com/auth
- *   SITE_MIND_ORIGIN  ReelyMind 浏览器侧 origin，如 https://www.reelymind.com
- *   SITE_NEXUS_ORIGIN ReelyNexus 浏览器侧 origin
- *   SITE_TRAIN_ORIGIN ReelyTrain 浏览器侧 origin
+ *   IDP_ISSUER        IdP 对外发行者，如 https://api.a.com/auth
+ *   SITE_A_ORIGIN  A 浏览器侧 origin，如 https://www.a.com
+ *   SITE_B_ORIGIN B 浏览器侧 origin
+ *   SITE_C_ORIGIN C 浏览器侧 origin
  */
 
 /** 站点浏览器侧 origin：环境变量 SITE_{ID}_ORIGIN 优先，回落到本地默认端口 */
@@ -25,7 +25,7 @@ function siteOrigin(id: string, fallback: string): string {
 
 /**
  * BFF 内部地址：环境变量 BFF_{ID}_INTERNAL 优先。
- * 本地开发走回环端口；容器部署时由 compose 指向 BFF 容器（http://bff-mind:4001 等）。
+ * 本地开发走回环端口；容器部署时由 compose 指向 BFF 容器（http://bff-a:4001 等）。
  */
 function bffInternal(id: string, fallbackPort: number): string {
   return process.env[`BFF_${id.toUpperCase()}_INTERNAL`] || `http://127.0.0.1:${fallbackPort}`;
@@ -33,31 +33,31 @@ function bffInternal(id: string, fallbackPort: number): string {
 
 const sites = [
   {
-    id: 'mind',
-    clientId: 'reelymind',
-    clientSecret: 'dev-secret-mind',
-    webOrigin: siteOrigin('mind', 'http://localhost:3001'),
-    bffInternal: bffInternal('mind', 4001),
-    brandName: 'ReelyMind',
-    domain: 'www.reelymind.com',
+    id: 'a',
+    clientId: 'a',
+    clientSecret: 'dev-secret-a',
+    webOrigin: siteOrigin('a', 'http://localhost:3001'),
+    bffInternal: bffInternal('a', 4001),
+    brandName: 'A',
+    domain: 'www.a.com',
   },
   {
-    id: 'nexus',
-    clientId: 'reelynexus',
-    clientSecret: 'dev-secret-nexus',
-    webOrigin: siteOrigin('nexus', 'http://localhost:3002'),
-    bffInternal: bffInternal('nexus', 4002),
-    brandName: 'ReelyNexus',
-    domain: 'www.reelynexus.com',
+    id: 'b',
+    clientId: 'b',
+    clientSecret: 'dev-secret-b',
+    webOrigin: siteOrigin('b', 'http://localhost:3002'),
+    bffInternal: bffInternal('b', 4002),
+    brandName: 'B',
+    domain: 'www.b.com',
   },
   {
-    id: 'train',
-    clientId: 'reelytrain',
-    clientSecret: 'dev-secret-train',
-    webOrigin: siteOrigin('train', 'http://localhost:3003'),
-    bffInternal: bffInternal('train', 4003),
-    brandName: 'ReelyTrain',
-    domain: 'www.reelytrain.com',
+    id: 'c',
+    clientId: 'c',
+    clientSecret: 'dev-secret-c',
+    webOrigin: siteOrigin('c', 'http://localhost:3003'),
+    bffInternal: bffInternal('c', 4003),
+    brandName: 'C',
+    domain: 'www.c.com',
   },
 ];
 
@@ -79,16 +79,16 @@ export const config = {
   /** 允许跨域调用 /auth/api 公开接口的站点来源 */
   corsOrigins: sites.map((s) => s.webOrigin),
   /** oidc-provider 签名 Cookie 用密钥（生产必须通过环境变量覆盖） */
-  cookieKeys: (process.env.IDP_COOKIE_KEYS || 'reely-dev-cookie-key-please-change').split(','),
+  cookieKeys: (process.env.IDP_COOKIE_KEYS || 'sso-dev-cookie-key-please-change').split(','),
   /** 管理端简单令牌 */
-  adminToken: process.env.IDP_ADMIN_TOKEN || 'reely-admin-dev',
+  adminToken: process.env.IDP_ADMIN_TOKEN || 'sso-admin-dev',
   /** PostgreSQL 连接（替代原 SQLite 文件库） */
   pg: {
     host: process.env.PG_HOST || '127.0.0.1',
     port: Number(process.env.PG_PORT || 5432),
     user: process.env.PG_USER || 'root',
     password: process.env.PG_PASSWORD || 'root',
-    database: process.env.PG_DATABASE || 'reely_idp',
+    database: process.env.PG_DATABASE || 'sso_idp',
   },
   /** Redis 连接（BFF 会话、限流等共享状态；IdP 侧用于限流与短时状态：SSO 票据/联邦 state/短信验证码，均带原生 TTL） */
   redis: {

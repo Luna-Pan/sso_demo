@@ -54,7 +54,7 @@ const challenge = b64url(await crypto.subtle.digest('SHA-256', Buffer.from(verif
 // 3. bridge + authorize（跟随重定向直到业务站 redirect_uri）
 const bridge = new URL(`${BASE}/auth/bridge/establish`);
 bridge.searchParams.set('ticket', login.ticket);
-bridge.searchParams.set('client_id', 'reelymind');
+bridge.searchParams.set('client_id', 'a');
 bridge.searchParams.set('redirect_uri', REDIRECT);
 bridge.searchParams.set('state', 'xyz');
 bridge.searchParams.set('nonce', 'nonce-1');
@@ -65,7 +65,7 @@ const final = await follow(bridge.toString());
 const code = new URL(final.url).searchParams.get('code');
 const state = new URL(final.url).searchParams.get('state');
 console.log('2. authorize ->', final.url.startsWith(REDIRECT) ? `redirect_uri ok, code=${code.slice(0, 12)}…, state=${state}` : final.url);
-console.log('   SSO cookie set:', cookieJar.has('reely_sso'), 'status:', final.res.status, 'ct:', final.res.headers.get('content-type'));
+console.log('   SSO cookie set:', cookieJar.has('sso_sid'), 'status:', final.res.status, 'ct:', final.res.headers.get('content-type'));
 if (!code) {
   const t = await final.res.text();
   console.log('   body:', t.slice(0, 400));
@@ -79,8 +79,8 @@ r = await fetch(`${BASE}/auth/token`, {
   body: new URLSearchParams({
     grant_type: 'authorization_code',
     code,
-    client_id: 'reelymind',
-    client_secret: 'dev-secret-mind',
+    client_id: 'a',
+    client_secret: 'dev-secret-a',
     redirect_uri: REDIRECT,
     code_verifier: verifier,
   }),
@@ -108,7 +108,7 @@ console.log('4. id_token claims:', JSON.stringify({ iss: claims.iss, aud: claims
 
 // 6. prompt=none 带 SSO cookie 二次免登
 const silent = new URL(`${BASE}/auth/authorize`);
-silent.searchParams.set('client_id', 'reelynexus');
+silent.searchParams.set('client_id', 'b');
 silent.searchParams.set('redirect_uri', 'http://localhost:3002/auth/callback');
 silent.searchParams.set('response_type', 'code');
 silent.searchParams.set('state', 's2');

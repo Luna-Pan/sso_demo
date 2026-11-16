@@ -109,7 +109,7 @@ export default function Register() {
       <div className="glass-card">
         <BrandTitle size="sm">创建账号</BrandTitle>
         <p style={{ color: 'rgba(240,240,245,0.65)', marginTop: 8, marginBottom: 28 }}>
-          手机号注册即开通 Reely 统一身份，全站通行
+          手机号注册即开通 SSO 统一身份，全站通行
         </p>
 
         <Form
@@ -153,7 +153,7 @@ export default function Register() {
                 disabled={countdown > 0}
                 loading={sending}
                 onClick={handleSendSms}
-                className="reely-btn-ghost"
+                className="sso-btn-ghost"
                 style={{ flexShrink: 0 }}
               >
                 {countdown > 0 ? `${countdown}s 后重发` : '获取验证码'}
@@ -195,7 +195,7 @@ export default function Register() {
             size="large"
             block
             loading={submitting}
-            className="reely-btn-primary"
+            className="sso-btn-primary"
           >
             注册并登录
           </Button>

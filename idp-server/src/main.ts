@@ -43,7 +43,7 @@ async function bootstrap() {
   const oidcService = app.get(OidcService);
   oidcHolder.callback = oidcService.provider.callback();
   await app.listen(config.port, config.host);
-  logger.log(`Reely IdP started`);
+  logger.log(`SSO IdP started`);
   logger.log(`Issuer:        ${config.issuer}`);
   logger.log(`Discovery:     ${config.issuer}/.well-known/openid-configuration`);
   logger.log(`VSO mode:      ${config.vso.mode}`);

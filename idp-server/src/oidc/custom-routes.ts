@@ -104,7 +104,7 @@ export function registerCustomRoutes(provider: Provider, deps: CustomRouteDeps) 
           return;
         }
         await establishSession(ctx, userId, ['pwd']);
-        await audit.log({ userId, identityType: 'reely', action: 'sso_session_established', success: true, ip, ua });
+        await audit.log({ userId, identityType: 'local', action: 'sso_session_established', success: true, ip, ua });
         redirectToAuthorize(ctx, params);
         return;
       }

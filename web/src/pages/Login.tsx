@@ -120,7 +120,7 @@ export default function Login() {
             size="large"
             block
             loading={submitting}
-            className="reely-btn-primary"
+            className="sso-btn-primary"
           >
             登录
           </Button>
@@ -144,7 +144,7 @@ export default function Login() {
             size="large"
             loading={fedLoading}
             onClick={() => triggerFed('vso')}
-            className="reely-btn-vso"
+            className="sso-btn-vso"
           >
             VSO 登录
           </Button>
@@ -152,7 +152,7 @@ export default function Login() {
             size="large"
             loading={fedLoading}
             onClick={() => triggerFed('wechat')}
-            className="reely-btn-wechat"
+            className="sso-btn-wechat"
           >
             微信登录
           </Button>

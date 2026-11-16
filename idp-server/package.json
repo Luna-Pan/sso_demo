@@ -2,7 +2,7 @@
   "name": "idp-server",
   "version": "1.0.0",
   "private": true,
-  "description": "Reely unified identity provider (NestJS + oidc-provider)",
+  "description": "SSO unified identity provider (NestJS + oidc-provider)",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/main.js",

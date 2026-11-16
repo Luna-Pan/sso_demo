@@ -72,7 +72,7 @@ export interface RegisterResult { ticket: string; userId?: string }
 export interface SmsSendResult { ok: boolean; devCode?: string }
 
 export interface AccountBinding {
-  identityType: string;       // 'reely' | 'vso' | 'wechat' 等
+  identityType: string;       // 'local' | 'vso' | 'wechat' 等
   externalUniqueId: string;
   nickname?: string;
   avatar?: string;

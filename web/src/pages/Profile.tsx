@@ -144,7 +144,7 @@ export default function Profile() {
 
   function labelOf(t: string): string {
     switch (t) {
-      case 'reely': return 'Reely 账号';
+      case 'local': return '本地账号';
       case 'vso': return 'VSO';
       case 'wechat': return '微信';
       default: return t.toUpperCase();
@@ -183,12 +183,12 @@ export default function Profile() {
 
         <Space wrap size={12}>
           {!profile?.phone && (
-            <Button className="reely-btn-ghost" onClick={() => setBindPhoneOpen(true)}>
+            <Button className="sso-btn-ghost" onClick={() => setBindPhoneOpen(true)}>
               绑定手机号
             </Button>
           )}
           {!profile?.hasPassword && (
-            <Button className="reely-btn-ghost" onClick={() => setSetPwdOpen(true)}>
+            <Button className="sso-btn-ghost" onClick={() => setSetPwdOpen(true)}>
               设置登录密码
             </Button>
           )}
@@ -234,7 +234,7 @@ export default function Profile() {
                   danger
                   size="small"
                   onClick={() => void handleUnbind(b)}
-                  disabled={b.identityType === 'reely' && bindings.filter(x => x.identityType === 'reely').length <= 1}
+                  disabled={b.identityType === 'local' && bindings.filter(x => x.identityType === 'local').length <= 1}
                 >
                   解绑
                 </Button>
@@ -246,10 +246,10 @@ export default function Profile() {
         <Divider style={{ borderColor: 'rgba(255,255,255,0.08)', margin: '20px 0' }} />
 
         <Space wrap size={12}>
-          <Button className="reely-btn-vso" onClick={() => handleBindFed('vso')}>
+          <Button className="sso-btn-vso" onClick={() => handleBindFed('vso')}>
             {bindings.some(b => b.identityType === 'vso') ? '重新绑定 VSO' : '绑定 VSO 账号'}
           </Button>
-          <Button className="reely-btn-wechat" onClick={() => handleBindFed('wechat')}>
+          <Button className="sso-btn-wechat" onClick={() => handleBindFed('wechat')}>
             {bindings.some(b => b.identityType === 'wechat') ? '重新绑定微信' : '绑定微信账号'}
           </Button>
         </Space>
@@ -278,7 +278,7 @@ export default function Profile() {
                 size="large"
                 disabled={countdown > 0}
                 onClick={() => void sendBindPhoneCode()}
-                className="reely-btn-ghost"
+                className="sso-btn-ghost"
                 style={{ flexShrink: 0 }}
               >
                 {countdown > 0 ? `${countdown}s` : '获取验证码'}
